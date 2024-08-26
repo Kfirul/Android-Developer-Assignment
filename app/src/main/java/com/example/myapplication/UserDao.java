@@ -19,7 +19,11 @@ public interface UserDao {
     @Delete
     void delete(UserEntity user);
 
+    @Query("SELECT * FROM user_table WHERE id = :userId")
+    UserEntity getUserById(int userId);
+
     @Query("SELECT * FROM user_table")
     List<UserEntity> getAllUsers();
 }
+
 
