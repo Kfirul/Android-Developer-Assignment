@@ -66,24 +66,39 @@
 
 
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/BTN_Return"
-            android:layout_width="161dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/email"
-            android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginStart="36dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="23dp"
-            android:layout_marginEnd="76dp"
+            android:layout_marginStart="-64dp"
+            android:layout_marginTop="89dp"
             android:layout_toEndOf="@+id/avatar"
-            android:singleLine="true"
-            android:text="Return"
-            android:textColor="@color/black"
-            android:textSize="15dp">
+            android:orientation="horizontal">
 
-        </androidx.appcompat.widget.AppCompatButton>
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/BTN_Edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="80dp"
+                android:singleLine="true"
+                android:text="Edit"
+                android:textColor="@color/white"
+                android:textSize="15dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/BTN_Remove"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:singleLine="true"
+                android:text="Remove"
+                android:textColor="@color/white"
+                android:textSize="15dp" />
+
+        </LinearLayout>
 
     </RelativeLayout>
 

@@ -12,14 +12,18 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
+
     private Context context;
     private ArrayList<UserData> arrayList;
-    private OnSelectButtonClickListener onSelectButtonClickListener;
+    private OnEditButtonClickListener onEditButtonClickListener;
+    private OnRemoveButtonClickListener removeButtonClickListener;
 
-    public UserAdapter(Context context, ArrayList<UserData> arrayList, OnSelectButtonClickListener listener) {
+    public UserAdapter(Context context, ArrayList<UserData> arrayList,
+                       OnEditButtonClickListener listener, OnRemoveButtonClickListener removeListener) {
         this.context = context;
         this.arrayList = arrayList;
-        this.onSelectButtonClickListener = listener;
+        this.onEditButtonClickListener = listener;
+        this.removeButtonClickListener = removeListener;
     }
 
     @NonNull
@@ -29,23 +33,21 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
         return new MyHolder(view);
     }
 
+
     @Override
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
-        UserData userData = arrayList.get(position);
-        holder.firstName.setText(userData.getFirstName());
-        holder.lastName.setText(userData.getLastName());
-        holder.email.setText(userData.getEmail());
+        UserData user = arrayList.get(position);
+        holder.firstName.setText(user.getFirstName());
+        holder.lastName.setText(user.getLastName());
+        holder.email.setText(user.getEmail());
 
-        String imageURL = userData.getAvatar();
-        if (imageURL != null && !imageURL.isEmpty()) {
-            Picasso.get()
-                    .load(imageURL)
-                    .placeholder(R.drawable.anonymous) // Placeholder image while loading
-                    .into(holder.avatar);
+        if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+            Picasso.get().load(user.getAvatar()).placeholder(R.drawable.anonymous).into(holder.avatar);
         } else {
             holder.avatar.setImageResource(R.drawable.anonymous);
         }
     }
+
 
     @Override
     public int getItemCount() {
@@ -53,6 +55,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
     }
 
     public class MyHolder extends RecyclerView.ViewHolder {
+
         TextView firstName, lastName, email;
         ImageView avatar;
 
@@ -63,20 +66,33 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
             email = itemView.findViewById(R.id.email);
             avatar = itemView.findViewById(R.id.avatar);
 
-            itemView.findViewById(R.id.BTN_Return).setOnClickListener(v -> {
+            itemView.findViewById(R.id.BTN_Edit).setOnClickListener(v -> {
                 int position = getAdapterPosition();
-                if (onSelectButtonClickListener != null && position != RecyclerView.NO_POSITION) {
-                    onSelectButtonClickListener.onSelectButtonClick(arrayList.get(position));
+                if (onEditButtonClickListener != null && position != RecyclerView.NO_POSITION) {
+                    onEditButtonClickListener.onEditButtonClick(arrayList.get(position));
+                }
+            });
+
+            itemView.findViewById(R.id.BTN_Remove).setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (removeButtonClickListener != null && position != RecyclerView.NO_POSITION) {
+                    removeButtonClickListener.onRemoveButtonClick(arrayList.get(position));
                 }
             });
         }
     }
 
-    public interface OnSelectButtonClickListener {
-        void onSelectButtonClick(UserData userData);
+    public interface OnEditButtonClickListener {
+        void onEditButtonClick(UserData userData);
     }
+
+    public interface OnRemoveButtonClickListener {
+        void onRemoveButtonClick(UserData userData);
+    }
+
     public void updateList(ArrayList<UserData> newList) {
-        arrayList.clear();
-        arrayList.addAll(newList);
+        arrayList = new ArrayList<>(newList);
+        notifyDataSetChanged();
     }
+
 }

@@ -1,15 +1,34 @@
 package com.example.myapplication;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -17,28 +36,47 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 
-public class MainActivity extends AppCompatActivity implements UserAdapter.OnSelectButtonClickListener {
+public class MainActivity extends AppCompatActivity implements UserAdapter.OnEditButtonClickListener, UserAdapter.OnRemoveButtonClickListener {
 
     interface RequestUser {
         @GET("/api/users")
         Call<UserListResponse> getUsers();
     }
 
-    List<UserData> userList;
-    UserDatabase db;
+    private static final int REQUEST_READ_STORAGE_PERMISSION = 1;
+
+    private List<UserData> userList;
+    private UserDatabase db;
     private SearchView searchView;
     private RecyclerView recyclerView;
     private ArrayList<UserData> userArrayList = new ArrayList<>();
-    private ArrayList<UserData> searchList;
+    private ArrayList<UserData> searchList = new ArrayList<>();
     private UserAdapter userAdapter;
+    private Uri selectedImageUri;
+    private ImageView avatarImageView;
+
+    private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+            selectedImageUri = result.getData().getData();
+            if (selectedImageUri != null) {
+                Picasso.get().load(selectedImageUri).into(avatarImageView);
+            }
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Check and request storage permission
+        if (!checkStoragePermission()) {
+            requestStoragePermission();
+        }
+
         recyclerView = findViewById(R.id.recycleView);
         searchView = findViewById(R.id.searchView);
+        Button addButton = findViewById(R.id.add_user_button);
 
         // Initialize the database
         db = UserDatabase.getDatabase(this);
@@ -72,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnSel
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        userAdapter = new UserAdapter(this, userArrayList, this);
+        userAdapter = new UserAdapter(this, userArrayList, this::onEditButtonClick, this::onRemoveButtonClick);
         recyclerView.setAdapter(userAdapter);
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -92,12 +130,100 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnSel
         });
 
         displayUserNames();
+        logAllUsers();
+    }
+
+
+
+    @Override
+    public void onEditButtonClick(UserData userData) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_user, null);
+
+        EditText firstName = dialogView.findViewById(R.id.edit_first_name);
+        EditText lastName = dialogView.findViewById(R.id.edit_last_name);
+        EditText email = dialogView.findViewById(R.id.edit_email);
+        avatarImageView = dialogView.findViewById(R.id.edit_avatar);
+
+        // Set initial values
+        firstName.setText(userData.getFirstName());
+        lastName.setText(userData.getLastName());
+        email.setText(userData.getEmail());
+
+        if (userData.getAvatar() != null && !userData.getAvatar().isEmpty()) {
+            Picasso.get().load(userData.getAvatar()).placeholder(R.drawable.anonymous).into(avatarImageView);
+        }
+
+        avatarImageView.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            pickImageLauncher.launch(intent);
+        });
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView)
+                .setTitle("Edit User")
+                .setPositiveButton("Save", (dialog, which) -> {
+                    // Update user details
+                    userData.setFirstName(firstName.getText().toString());
+                    userData.setLastName(lastName.getText().toString());
+                    userData.setEmail(email.getText().toString());
+
+                    // If a new image was selected, update avatar
+                    if (selectedImageUri != null) {
+                        userData.setAvatar(selectedImageUri.toString());
+                    }
+
+                    // Save changes to database
+                    AsyncTask.execute(() -> {
+                        UserDao userDao = db.userDao();
+                        UserEntity userEntity = userDao.getUserById(userData.getId());
+                        if (userEntity != null) {
+                            userEntity.setFirstName(userData.getFirstName());
+                            userEntity.setLastName(userData.getLastName());
+                            userEntity.setEmail(userData.getEmail());
+                            if (selectedImageUri != null) {
+                                userEntity.setAvatar(userData.getAvatar());  // Update avatar
+                            }
+                            userDao.update(userEntity);
+                            Log.d("MainActivity", "User saved to database: " + userEntity.getFirstName());
+                        }
+                    });
+
+                    // Refresh UI
+                    runOnUiThread(() -> {
+                        userAdapter.notifyDataSetChanged();
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
     }
 
     @Override
-    public void onSelectButtonClick(UserData userData) {
-        Log.d("MainActivity", "Select button clicked for user: " + userData.getFirstName() + " " + userData.getLastName());
-        // Handle select button click here
+    public void onRemoveButtonClick(UserData userData) {
+        new AlertDialog.Builder(this)
+                .setTitle("Confirm Remove")
+                .setMessage("Are you sure you want to remove this user?")
+                .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                    // Remove the user from the database
+                    AsyncTask.execute(() -> {
+                        UserDao userDao = db.userDao();
+                        UserEntity userEntity = userDao.getUserById(userData.getId());
+                        if (userEntity != null) {
+                            userDao.delete(userEntity);
+                            Log.d("MainActivity", "Removed user: " + userEntity.firstName);
+
+                            // Update the UI after removing the user
+                            runOnUiThread(() -> {
+                                userArrayList.remove(userData);
+                                userAdapter.notifyDataSetChanged();
+                            });
+                        }
+                    });
+                })
+                .setNegativeButton(android.R.string.no, null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
     private void saveUsersToDatabase(List<UserData> users) {
@@ -125,7 +251,6 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnSel
         });
     }
 
-
     private void displayUserNames() {
         Log.d("MainActivity", "Displaying user names from database");
         AsyncTask.execute(() -> {
@@ -138,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnSel
                 userData.setEmail(user.email);
                 userData.setFirstName(user.firstName);
                 userData.setLastName(user.lastName);
-                userData.setAvatar(user.avatar);
+                userData.setAvatar(user.avatar);  // Make sure avatar URI is set
                 userDataList.add(userData);
             }
             runOnUiThread(() -> {
@@ -150,21 +275,43 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnSel
     }
 
     private void performSearch(String query) {
-        Log.d("MainActivity", "Performing search with query: " + query);
-        searchList = new ArrayList<>();
-        if (query.length() > 0) {
-            for (UserData userData : userArrayList) {
-                if (userData.getFirstName().toUpperCase().contains(query.toUpperCase())
-                        || userData.getLastName().toUpperCase().contains(query.toUpperCase())) {
-                    searchList.add(userData);
-                }
+        searchList.clear();
+        for (UserData user : userArrayList) {
+            if (user.getFirstName().toLowerCase().contains(query.toLowerCase()) ||
+                    user.getLastName().toLowerCase().contains(query.toLowerCase())) {
+                searchList.add(user);
             }
-        } else {
-            searchList.addAll(userArrayList);
         }
+        userAdapter.updateList(searchList);
+    }
 
-        userAdapter = new UserAdapter(this, searchList, this);
-        recyclerView.setAdapter(userAdapter);
+    private boolean checkStoragePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestStoragePermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_READ_STORAGE_PERMISSION);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_READ_STORAGE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+            } else {
+                // Permission denied
+                // Handle this situation
+            }
+        }
+    }
+
+    private void logAllUsers() {
+        AsyncTask.execute(() -> {
+            List<UserEntity> users = db.userDao().getAllUsers();
+            for (UserEntity user : users) {
+                Log.d("MainActivity", "User: " + user.firstName + ", Avatar: " + user.avatar);
+            }
+        });
     }
 }
-
