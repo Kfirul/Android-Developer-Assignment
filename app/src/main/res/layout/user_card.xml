@@ -1,103 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:layout_marginHorizontal="10dp"
     android:layout_marginTop="10dp"
-    app:cardElevation="10dp"
-    app:cardCornerRadius="10dp"
-    android:padding="3dp"
-    android:layout_height="wrap_content">
+    app:cardElevation="8dp"
+    app:cardCornerRadius="12dp"
+    android:padding="8dp"
+    android:backgroundTint="@color/cardBackgroundColor">
 
     <RelativeLayout
-        android:layout_width="355dp"
-        android:layout_height="118dp">
+        android:layout_width="match_parent"
+        android:layout_height="150dp">
+
+        <!-- Colorful Side Bar -->
+        <View
+            android:layout_width="8dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:background="@color/sidebar_color" />
 
         <ImageView
             android:id="@+id/avatar"
-            android:layout_width="94dp"
-            android:layout_height="131dp"
-            android:layout_marginStart="5dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="5dp"
-            android:layout_marginBottom="5dp"
-            android:scaleType="fitXY">
-
-        </ImageView>
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="3dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:scaleType="centerCrop" />
 
         <TextView
             android:id="@+id/first_name"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="5dp"
-            android:layout_toRightOf="@+id/avatar"
-            android:singleLine="true"
+            android:layout_marginStart="124dp"
+            android:layout_marginTop="16dp"
             android:text="First Name"
-            android:textColor="@color/black"
-            android:textSize="15dp"
+            android:textColor="@color/text_dark_gray"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/last_name"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/first_name"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="5dp"
-            android:layout_toRightOf="@+id/avatar"
-            android:singleLine="true"
+            android:layout_marginStart="124dp"
+            android:layout_marginTop="4dp"
             android:text="Last Name"
-            android:textColor="@color/black"
-            android:textSize="15dp" />
+            android:textColor="@color/text_dark_gray"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/email"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/last_name"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="5dp"
-            android:layout_toRightOf="@+id/avatar"
-            android:singleLine="true"
+            android:layout_marginStart="124dp"
+            android:layout_marginTop="4dp"
             android:text="Email"
-            android:textColor="@color/black"
-            android:textSize="15dp" />
+            android:textColor="@color/text_dark_gray"
+            android:textSize="14sp" />
 
-
+        <!-- Buttons Layout -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:layout_marginStart="-77dp"
-            android:layout_marginTop="79dp"
-            android:layout_toEndOf="@+id/avatar"
-            android:orientation="horizontal">
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/BTN_Edit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginLeft="80dp"
-                android:drawableBottom="@drawable/edit_user"
-                android:singleLine="true"
-                android:textColor="@color/white"
-                android:textSize="15dp" />
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginBottom="8dp"
+                android:backgroundTint="@color/cardBackgroundColor"
+                android:drawableTop="@drawable/edit_user"
+                android:padding="8dp"
+                android:text=""
+                android:textColor="@color/text_dark_gray"
+                android:textSize="12sp" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/BTN_Remove"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginLeft="10dp"
-                android:drawableBottom="@drawable/delete_user"
-                android:singleLine="true"
-                android:textColor="@color/white"
-                android:textSize="15dp" />
-
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:backgroundTint="@color/cardBackgroundColor"
+                android:drawableTop="@drawable/delete_user"
+                android:padding="8dp"
+                android:text=""
+                android:textColor="@color/text_dark_gray"
+                android:textSize="12sp" />
         </LinearLayout>
-
     </RelativeLayout>
-
 </androidx.cardview.widget.CardView>

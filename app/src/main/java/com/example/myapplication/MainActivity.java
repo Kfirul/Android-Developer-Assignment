@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -60,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
     private Button addButton;
     private Button restartButton;
     private Button sortButton;
+    private TextView numberOfUsersTextView;
+
 
     private static final String PREFS_NAME = "MyAppPrefs";
     private static final String KEY_API_CALLED = "api_called";
@@ -87,6 +90,8 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
         searchView = findViewById(R.id.searchView);
         addButton = findViewById(R.id.add_user_button);
         restartButton = findViewById(R.id.restart_button);
+        numberOfUsersTextView = findViewById(R.id.number_of_users);
+
 
         // Initialize the database
         db = UserDatabase.getDatabase(this);
@@ -177,11 +182,26 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                 builder.setView(dialogView)
                         .setTitle("Add User")
                         .setPositiveButton("Add", (dialog, which) -> {
+                            String fName = firstName.getText().toString();
+                            String lName = lastName.getText().toString();
+                            String emailText = email.getText().toString();
+
+                            // Validate user input
+                            if (!validateUserInput(fName, lName, emailText)) {
+                                // Show error message
+                                new AlertDialog.Builder(MainActivity.this)
+                                        .setTitle("Validation Error")
+                                        .setMessage("Please enter valid first name, last name, and email.")
+                                        .setPositiveButton("OK", null)
+                                        .show();
+                                return;
+                            }
+
                             // Create new UserData object
                             UserData newUser = new UserData();
-                            newUser.setFirstName(firstName.getText().toString());
-                            newUser.setLastName(lastName.getText().toString());
-                            newUser.setEmail(email.getText().toString());
+                            newUser.setFirstName(fName);
+                            newUser.setLastName(lName);
+                            newUser.setEmail(emailText);
 
                             // Generate a unique ID
                             long newUserId = generateUniqueId();
@@ -209,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                                     runOnUiThread(() -> {
                                         userArrayList.add(newUser);
                                         userAdapter.notifyDataSetChanged();
+                                        updateNumberOfUsers();
                                     });
                                 } catch (Exception e) {
                                     Log.e("MainActivity", "Error saving user: " + e.getMessage(), e);
@@ -219,8 +240,8 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                         .create()
                         .show();
                 refreshUserList();
+                updateNumberOfUsers();
             }
-
 
         });
         restartButton.setOnClickListener(new View.OnClickListener() {
@@ -251,7 +272,30 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
 
         displayUserNames();
         logAllUsers();
+        updateNumberOfUsers();
     }
+    private void updateNumberOfUsers() {
+        Log.d("MainActivity", "Updating number of users");
+        AsyncTask.execute(() -> {
+            // Access UserDao to get all users
+            List<UserEntity> usersFromDb = db.userDao().getAllUsers();
+            int userCount = usersFromDb.size();
+            Log.d("MainActivity", "User count: " + userCount);
+
+            // Ensure updating the UI is done on the main thread
+            runOnUiThread(() -> {
+                if (numberOfUsersTextView != null) {
+                    numberOfUsersTextView.setText("Number of users: " + userCount);
+                } else {
+                    Log.e("MainActivity", "numberOfUsersTextView is null");
+                }
+            });
+        });
+    }
+
+
+
+
     private void showSortOptions() {
         String[] sortOptions = {"Sort by First Name", "Sort by Last Name"};
 
@@ -299,6 +343,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                 userArrayList.clear(); // Clear the list in memory
                 userAdapter.notifyDataSetChanged(); // Refresh the UI
                 callApiAndSaveUsers(); // Call API to retrieve and save users
+                updateNumberOfUsers();
             });
         });
     }
@@ -360,10 +405,25 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
         builder.setView(dialogView)
                 .setTitle("Edit User")
                 .setPositiveButton("Save", (dialog, which) -> {
+                    String fName = firstName.getText().toString();
+                    String lName = lastName.getText().toString();
+                    String emailText = email.getText().toString();
+
+                    // Validate user input
+                    if (!validateUserInput(fName, lName, emailText)) {
+                        // Show error message
+                        new AlertDialog.Builder(this)
+                                .setTitle("Validation Error")
+                                .setMessage("Please enter valid first name, last name, and email.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                        return;
+                    }
+
                     // Update user details
-                    userData.setFirstName(firstName.getText().toString());
-                    userData.setLastName(lastName.getText().toString());
-                    userData.setEmail(email.getText().toString());
+                    userData.setFirstName(fName);
+                    userData.setLastName(lName);
+                    userData.setEmail(emailText);
 
                     // If a new image was selected, update avatar
                     if (selectedImageUri != null) {
@@ -414,6 +474,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                             runOnUiThread(() -> {
                                 userArrayList.remove(userData);
                                 userAdapter.notifyDataSetChanged();
+                                updateNumberOfUsers();
                             });
                         }
                     });
@@ -511,6 +572,19 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
             }
         });
     }
+    private boolean validateUserInput(String firstName, String lastName, String email) {
+        // Check if first name and last name are not empty
+        if (firstName.trim().isEmpty() || lastName.trim().isEmpty()) {
+            return false;
+        }
+
+        // Check if email is not empty and has a valid format
+        if (email.trim().isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            return false;
+        }
+
+        return true;
+    }
 
     private synchronized long generateUniqueId() {
         long maxId = 0;
@@ -542,10 +616,5 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
             });
         });
     }
-
-
-
-
-
 
 }

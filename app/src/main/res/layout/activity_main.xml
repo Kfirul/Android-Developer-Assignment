@@ -7,74 +7,108 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/card"
-        android:layout_width="335dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="10dp"
         android:layout_marginTop="10dp"
         app:cardCornerRadius="5dp"
-        app:cardElevation="5dp">
+        app:cardElevation="5dp"
+        android:background="@color/background_soft_gray">
 
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/searchView"
-            android:layout_width="337dp"
-            android:layout_height="match_parent"
-            android:background="@color/white"
-            app:queryHint="Search here" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/searchView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_toStartOf="@+id/sort_button"
+                android:background="@color/background_light_cream"
+                app:queryHint="Search here" />
+
+            <Button
+                android:id="@+id/sort_button"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="10dp"
+                android:layout_alignBaseline="@+id/searchView"
+                android:backgroundTint="@color/background_light_cream"
+                android:drawableEnd="@drawable/sort"
+                android:padding="10dp"
+                android:textColor="@color/text_dark_gray" />
+
+        </RelativeLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Restart Button -->
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycleView"
+    <!-- Linear Layout for Buttons and TextView -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/card"
-        android:layout_alignParentEnd="true"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="56dp"
-        android:layout_marginBottom="10dp" />
-
-    <Button
-        android:id="@+id/sort_button"
-        android:layout_width="48dp"
-        android:layout_height="58dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="2dp"
-        android:backgroundTint="@color/white"
-        android:drawableEnd="@drawable/sort"
-        android:padding="10dp"
-        android:textColor="@android:color/white" />
-
-    <Button
-        android:id="@+id/restart_button"
-        android:layout_width="47dp"
-        android:layout_height="47dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="557dp"
         android:layout_marginEnd="10dp"
-        android:background="@drawable/circular_button_shape"
-        android:backgroundTint="@color/gray"
-        android:drawableEnd="@drawable/restart"
-        android:padding="10dp"
-        android:textColor="@android:color/white" />
-
-    <!-- Add User Button -->
-    <Button
-        android:id="@+id/add_user_button"
-        android:layout_width="47dp"
-        android:layout_height="47dp"
-        android:layout_below="@id/restart_button"
-        android:layout_alignParentEnd="true"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:background="@drawable/circular_button_shape"
-        android:backgroundTint="@color/gray"
-        android:drawableEnd="@drawable/add_user"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:padding="10dp"
-        android:textColor="@android:color/white" />
+        android:background="@color/background_light_cream">
+
+        <!-- TextView for Number of Users -->
+        <TextView
+            android:id="@+id/number_of_users"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Number of users: 0"
+            android:textColor="@color/text_dark_gray"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Buttons Layout -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/restart_button"
+                android:layout_width="47dp"
+                android:layout_height="47dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/circular_button_shape"
+                android:backgroundTint="@color/button_primary"
+                android:drawableEnd="@drawable/restart"
+                android:padding="10dp"
+                android:textColor="@color/text_dark_gray" />
+
+            <Button
+                android:id="@+id/add_user_button"
+                android:layout_width="47dp"
+                android:layout_height="47dp"
+                android:background="@drawable/circular_button_shape"
+                android:backgroundTint="@color/button_primary"
+                android:drawableEnd="@drawable/add_user"
+                android:padding="10dp"
+                android:textColor="@color/text_dark_gray" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycleView"
+        android:layout_width="393dp"
+        android:layout_height="567dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="144dp"
+        android:layout_marginBottom="19dp" />
 
 </RelativeLayout>

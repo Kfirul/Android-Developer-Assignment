@@ -3,34 +3,51 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="20dp"
+    android:background="@color/background_main">
 
-    <ImageView
+    <!-- Replace ImageView -->
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/edit_avatar"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:layout_gravity="center"
         android:src="@drawable/anonymous"
         android:clickable="true"
-        android:focusable="true"/>
+        android:focusable="true"
+        android:padding="4dp" />
 
-
+    <!-- First Name EditText -->
     <EditText
         android:id="@+id/edit_first_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="First Name" />
+        android:hint="First Name"
+        android:padding="12dp"
+        android:background="@color/edittext_background"
+        android:textColor="@color/text_black"
+        android:textColorHint="@color/hint_color" />
 
+    <!-- Last Name EditText -->
     <EditText
         android:id="@+id/edit_last_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Last Name" />
+        android:hint="Last Name"
+        android:padding="12dp"
+        android:background="@color/edittext_background"
+        android:textColor="@color/text_black"
+        android:textColorHint="@color/hint_color" />
 
+    <!-- Email EditText -->
     <EditText
         android:id="@+id/edit_email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Email" />
+        android:hint="Email"
+        android:padding="12dp"
+        android:background="@color/edittext_background"
+        android:textColor="@color/text_black"
+        android:textColorHint="@color/hint_color" />
 
 </LinearLayout>
