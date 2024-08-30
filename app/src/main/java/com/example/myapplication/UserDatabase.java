@@ -25,5 +25,3 @@ public abstract class UserDatabase extends RoomDatabase {
         return INSTANCE;
     }
 }
-
-

@@ -14,15 +14,15 @@ public class UserEntity {
     public String lastName;
     public String avatar;
 
-    public UserEntity(String email, String firstName, String lastName, String avatar) {
-        this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.avatar = avatar;
-    }
-
-    // No-argument constructor needed for Room
-    public UserEntity() {}
+//    public UserEntity(String email, String firstName, String lastName, String avatar) {
+//        this.email = email;
+//        this.firstName = firstName;
+//        this.lastName = lastName;
+//        this.avatar = avatar;
+//    }
+//
+//    // No-argument constructor needed for Room
+//    public UserEntity() {}
 
     public long getId() {
         return id;

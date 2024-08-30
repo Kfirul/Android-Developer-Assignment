@@ -20,7 +20,7 @@ public interface UserDao {
     void delete(UserEntity user);
 
     @Query("SELECT * FROM user_table WHERE id = :id")
-    UserEntity getUserByIdy(long id);
+    UserEntity getUserById(long id);
 
     @Query("SELECT * FROM user_table")
     List<UserEntity> getAllUsers();
@@ -31,6 +31,7 @@ public interface UserDao {
 
     @Query("DELETE FROM user_table") // Assuming your table is named user_table
     void deleteAllUsers();
+
+    @Insert
+    void insertAll(List<UserEntity> users); // Fixed to accept List<UserEntity>
 }
-
-
