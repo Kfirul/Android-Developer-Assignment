@@ -7,7 +7,7 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/card"
-        android:layout_width="match_parent"
+        android:layout_width="335dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="10dp"
         android:layout_marginTop="10dp"
@@ -16,26 +16,65 @@
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
-            android:layout_width="match_parent"
+            android:layout_width="337dp"
             android:layout_height="match_parent"
             android:background="@color/white"
             app:queryHint="Search here" />
     </androidx.cardview.widget.CardView>
 
+    <!-- Restart Button -->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycleView"
-        android:layout_margin="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/card" />
+        android:layout_below="@+id/card"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="56dp"
+        android:layout_marginBottom="10dp" />
 
     <Button
-        android:id="@+id/add_user_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:id="@+id/sort_button"
+        android:layout_width="48dp"
+        android:layout_height="58dp"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_margin="16dp"
-        android:drawableLeft="@drawable/add_user"
-        android:text="Add User" />
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="2dp"
+        android:backgroundTint="@color/white"
+        android:drawableEnd="@drawable/sort"
+        android:padding="10dp"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/restart_button"
+        android:layout_width="47dp"
+        android:layout_height="47dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="557dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/circular_button_shape"
+        android:backgroundTint="@color/gray"
+        android:drawableEnd="@drawable/restart"
+        android:padding="10dp"
+        android:textColor="@android:color/white" />
+
+    <!-- Add User Button -->
+    <Button
+        android:id="@+id/add_user_button"
+        android:layout_width="47dp"
+        android:layout_height="47dp"
+        android:layout_below="@id/restart_button"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/circular_button_shape"
+        android:backgroundTint="@color/gray"
+        android:drawableEnd="@drawable/add_user"
+        android:padding="10dp"
+        android:textColor="@android:color/white" />
+
 </RelativeLayout>

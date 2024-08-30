@@ -6,27 +6,29 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "user_table")
 public class UserEntity {
 
-    @PrimaryKey
-    public int id;
+    @PrimaryKey(autoGenerate = true)
+    public long id;
 
     public String email;
     public String firstName;
     public String lastName;
     public String avatar;
 
-    public UserEntity(int id, String email, String firstName, String lastName, String avatar) {
-        this.id = id;
+    public UserEntity(String email, String firstName, String lastName, String avatar) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.avatar = avatar;
     }
 
-    public int getId() {
+    // No-argument constructor needed for Room
+    public UserEntity() {}
+
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -62,4 +64,3 @@ public class UserEntity {
         this.avatar = avatar;
     }
 }
-

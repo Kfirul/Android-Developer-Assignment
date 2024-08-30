@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -27,6 +28,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import retrofit2.Call;
@@ -54,6 +57,12 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
     private UserAdapter userAdapter;
     private Uri selectedImageUri;
     private ImageView avatarImageView;
+    private Button addButton;
+    private Button restartButton;
+    private Button sortButton;
+
+    private static final String PREFS_NAME = "MyAppPrefs";
+    private static final String KEY_API_CALLED = "api_called";
 
     private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
@@ -76,38 +85,54 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
 
         recyclerView = findViewById(R.id.recycleView);
         searchView = findViewById(R.id.searchView);
-        Button addButton = findViewById(R.id.add_user_button);
+        addButton = findViewById(R.id.add_user_button);
+        restartButton = findViewById(R.id.restart_button);
 
         // Initialize the database
         db = UserDatabase.getDatabase(this);
         Log.d("MainActivity", "Database initialized");
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://reqres.in/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+        // Check if the API has been called before
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean apiCalled = preferences.getBoolean(KEY_API_CALLED, false);
 
-        RequestUser requestUser = retrofit.create(RequestUser.class);
+        if (!apiCalled) {
+            // API has not been called before, make the API call
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("https://reqres.in/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
 
-        // API Call
-        requestUser.getUsers().enqueue(new Callback<UserListResponse>() {
-            @Override
-            public void onResponse(Call<UserListResponse> call, Response<UserListResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.d("MainActivity", "API call successful, data received");
-                    userList = response.body().data;
-                    userArrayList.addAll(userList);
-                    saveUsersToDatabase(userList);
-                } else {
-                    Log.e("MainActivity", "API call unsuccessful or body is null");
+            RequestUser requestUser = retrofit.create(RequestUser.class);
+
+            // API Call
+            requestUser.getUsers().enqueue(new Callback<UserListResponse>() {
+                @Override
+                public void onResponse(Call<UserListResponse> call, Response<UserListResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Log.d("MainActivity", "API call successful, data received");
+                        userList = response.body().data;
+                        userArrayList.addAll(userList);
+                        saveUsersToDatabase(userList);
+
+                        // Save flag in SharedPreferences
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putBoolean(KEY_API_CALLED, true);
+                        editor.apply(); // Apply changes
+                    } else {
+                        Log.e("MainActivity", "API call unsuccessful or body is null");
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(Call<UserListResponse> call, Throwable throwable) {
-                Log.e("MainActivity", "API call failed: " + throwable.getMessage());
-            }
-        });
+                @Override
+                public void onFailure(Call<UserListResponse> call, Throwable throwable) {
+                    Log.e("MainActivity", "API call failed: " + throwable.getMessage());
+                }
+            });
+        } else {
+            // API has been called before, just load users from the database
+            displayUserNames();
+        }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         userAdapter = new UserAdapter(this, userArrayList, this::onEditButtonClick, this::onRemoveButtonClick);
@@ -129,9 +154,181 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
             }
         });
 
+
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_user, null);
+
+                EditText firstName = dialogView.findViewById(R.id.edit_first_name);
+                EditText lastName = dialogView.findViewById(R.id.edit_last_name);
+                EditText email = dialogView.findViewById(R.id.edit_email);
+                avatarImageView = dialogView.findViewById(R.id.edit_avatar);
+
+                selectedImageUri = null; // Reset selected image URI for each dialog
+
+                avatarImageView.setOnClickListener(v -> {
+                    Intent intent = new Intent(Intent.ACTION_PICK);
+                    intent.setType("image/*");
+                    pickImageLauncher.launch(intent);
+                });
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setView(dialogView)
+                        .setTitle("Add User")
+                        .setPositiveButton("Add", (dialog, which) -> {
+                            // Create new UserData object
+                            UserData newUser = new UserData();
+                            newUser.setFirstName(firstName.getText().toString());
+                            newUser.setLastName(lastName.getText().toString());
+                            newUser.setEmail(email.getText().toString());
+
+                            // Generate a unique ID
+                            long newUserId = generateUniqueId();
+                            newUser.setId(newUserId);
+
+                            // If an image was selected, set the avatar
+                            if (selectedImageUri != null) {
+                                newUser.setAvatar(selectedImageUri.toString());
+                            } else {
+                                newUser.setAvatar(""); // Ensure it's not null
+                            }
+
+                            // Save new user to the database
+                            AsyncTask.execute(() -> {
+                                try {
+                                    UserDao userDao = db.userDao();
+                                    UserEntity userEntity = new UserEntity(
+                                            newUser.getEmail(),
+                                            newUser.getFirstName(),
+                                            newUser.getLastName(),
+                                            newUser.getAvatar()
+                                    );
+                                    userDao.insert(userEntity);
+
+                                    runOnUiThread(() -> {
+                                        userArrayList.add(newUser);
+                                        userAdapter.notifyDataSetChanged();
+                                    });
+                                } catch (Exception e) {
+                                    Log.e("MainActivity", "Error saving user: " + e.getMessage(), e);
+                                }
+                            });
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .create()
+                        .show();
+                refreshUserList();
+            }
+
+
+        });
+        restartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(v.getContext())
+                        .setTitle("Confirm Restart")
+                        .setMessage("Are you sure you wants to remove all users and call the API again?")
+                        .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                            eraseAndRefreshUsers(); // Call the function on button click
+                        })
+                        .setNegativeButton(android.R.string.no, null)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+            }
+        });
+
+        sortButton = findViewById(R.id.sort_button);
+
+        sortButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSortOptions();
+            }
+        });
+
+
+
         displayUserNames();
         logAllUsers();
     }
+    private void showSortOptions() {
+        String[] sortOptions = {"Sort by First Name", "Sort by Last Name"};
+
+        new AlertDialog.Builder(this)
+                .setTitle("Select Sorting Option")
+                .setItems(sortOptions, (dialog, which) -> {
+                    if (which == 0) {
+                        sortByFirstName();
+                    } else if (which == 1) {
+                        sortByLastName();
+                    }
+                })
+                .show();
+    }
+
+    private void sortByFirstName() {
+        Log.d("MainActivity", "Sorting by first name, user list size: " + (userArrayList != null ? userArrayList.size() : "null"));
+        if (userArrayList != null && !userArrayList.isEmpty()) {
+            Collections.sort(userArrayList, (u1, u2) -> u1.getFirstName().compareTo(u2.getFirstName()));
+            userAdapter.notifyDataSetChanged();
+        } else {
+            Log.e("MainActivity", "User list is null or empty, cannot sort.");
+        }
+    }
+
+    private void sortByLastName() {
+        Log.d("MainActivity", "Sorting by last name, user list size: " + (userArrayList != null ? userArrayList.size() : "null"));
+        if (userArrayList != null && !userArrayList.isEmpty()) {
+            Collections.sort(userArrayList, (u1, u2) -> u1.getLastName().compareTo(u2.getLastName()));
+            userAdapter.notifyDataSetChanged();
+        } else {
+            Log.e("MainActivity", "User list is null or empty, cannot sort.");
+        }
+    }
+
+
+
+    private void eraseAndRefreshUsers() {
+        // Erase all users from the database
+        AsyncTask.execute(() -> {
+            UserDao userDao = db.userDao();
+            userDao.deleteAllUsers();  // Assuming deleteAllUsers() is implemented in UserDao to delete all records
+
+            runOnUiThread(() -> {
+                userArrayList.clear(); // Clear the list in memory
+                userAdapter.notifyDataSetChanged(); // Refresh the UI
+                callApiAndSaveUsers(); // Call API to retrieve and save users
+            });
+        });
+    }
+
+    private void callApiAndSaveUsers() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://reqres.in/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RequestUser requestUser = retrofit.create(RequestUser.class);
+
+        requestUser.getUsers().enqueue(new Callback<UserListResponse>() {
+            @Override
+            public void onResponse(Call<UserListResponse> call, Response<UserListResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    userList = response.body().data;
+                    saveUsersToDatabase(userList);
+                } else {
+                    Log.e("MainActivity", "API call unsuccessful or body is null");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserListResponse> call, Throwable throwable) {
+                Log.e("MainActivity", "API call failed: " + throwable.getMessage());
+            }
+        });
+    }
+
 
 
 
@@ -176,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                     // Save changes to database
                     AsyncTask.execute(() -> {
                         UserDao userDao = db.userDao();
-                        UserEntity userEntity = userDao.getUserById(userData.getId());
+                        UserEntity userEntity = userDao.getUserByIdy(userData.getId());
                         if (userEntity != null) {
                             userEntity.setFirstName(userData.getFirstName());
                             userEntity.setLastName(userData.getLastName());
@@ -208,7 +405,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                     // Remove the user from the database
                     AsyncTask.execute(() -> {
                         UserDao userDao = db.userDao();
-                        UserEntity userEntity = userDao.getUserById(userData.getId());
+                        UserEntity userEntity = userDao.getUserByIdy(userData.getId());
                         if (userEntity != null) {
                             userDao.delete(userEntity);
                             Log.d("MainActivity", "Removed user: " + userEntity.firstName);
@@ -232,15 +429,15 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
             UserDao userDao = db.userDao();
             for (UserData user : users) {
                 // Check if user with the same id already exists
-                UserEntity existingUser = userDao.getUserById(user.id);
+                UserEntity existingUser = userDao.getUserByIdy(user.id);
                 if (existingUser == null) {
                     UserEntity userEntity = new UserEntity(
-                            user.id,
                             user.email,
                             user.firstName,
                             user.lastName,
                             user.avatar
                     );
+                    userEntity.setId(user.id);
                     userDao.insert(userEntity);
                     Log.d("MainActivity", "Inserted user: " + userEntity.firstName);
                 } else {
@@ -314,4 +511,41 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
             }
         });
     }
+
+    private synchronized long generateUniqueId() {
+        long maxId = 0;
+        for (UserData user : userArrayList) {
+            if (user.getId() > maxId) {
+                maxId = user.getId();
+            }
+        }
+        return maxId + 1;
+    }
+
+    private void refreshUserList() {
+        AsyncTask.execute(() -> {
+            List<UserEntity> usersFromDb = db.userDao().getAllUsers();
+            ArrayList<UserData> userDataList = new ArrayList<>();
+            for (UserEntity user : usersFromDb) {
+                UserData userData = new UserData();
+                userData.setId(user.id);
+                userData.setEmail(user.email);
+                userData.setFirstName(user.firstName);
+                userData.setLastName(user.lastName);
+                userData.setAvatar(user.avatar);
+                userDataList.add(userData);
+            }
+            runOnUiThread(() -> {
+                userArrayList.clear();
+                userArrayList.addAll(userDataList);
+                userAdapter.notifyDataSetChanged();
+            });
+        });
+    }
+
+
+
+
+
+
 }

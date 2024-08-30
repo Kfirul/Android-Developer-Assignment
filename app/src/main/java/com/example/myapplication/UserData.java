@@ -4,11 +4,11 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class UserData {
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -45,7 +45,7 @@ public class UserData {
     }
 
     @SerializedName("id")
-    int id;
+    long id;
 
     @SerializedName("email")
     String email;
