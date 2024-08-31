@@ -39,7 +39,7 @@ To install the application:
 * Searching Users: Use the search bar to filter users by first or last name.
 
 # Dependencies
-Retrofit: For making network calls.
-Room: For local database management.
-Picasso: For loading and displaying images.
-LiveData and ViewModel: For managing UI-related data lifecycle-aware.
+* Retrofit: For making network calls.
+* Room: For local database management.
+* Picasso: For loading and displaying images.
+* LiveData and ViewModel: For managing UI-related data lifecycle-aware.
