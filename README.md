@@ -16,6 +16,8 @@ MVVM (Model-View-ViewModel): The app uses the MVVM architecture, which promotes 
 * Model: Represents the data (e.g., UserData).
 * View: Activities and layouts that display the data.
 * ViewModel: Manages UI-related data and business logic (e.g., UserViewModel).
+![image](https://github.com/user-attachments/assets/ec425209-0f0b-4abf-a62f-8397cbe95c83)
+
 # API Integration
 * Library: The app uses the Retrofit library for API calls.
 * Endpoint: User data is fetched from the API at https://reqres.in/api/users.
