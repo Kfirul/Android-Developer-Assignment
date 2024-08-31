@@ -131,15 +131,25 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                     // Remove the user from the database
                     userViewModel.deleteUser(userData);
 
-                    // Update the UI after removing the user
+                    // Update both lists
                     userArrayList.remove(userData);
-                    userAdapter.notifyDataSetChanged();
+                    searchList.remove(userData);
+
+                    // Refresh the UI
+                    if (!searchView.getQuery().toString().isEmpty()) {
+                        performSearch(searchView.getQuery().toString());
+                    } else {
+                        // Update the adapter with the modified user list
+                        userAdapter = new UserAdapter(this, userArrayList, this::onEditButtonClick, this::onRemoveButtonClick);
+                        recyclerView.setAdapter(userAdapter);
+                    }
                     updateNumberOfUsers();
                 })
                 .setNegativeButton(android.R.string.no, null)
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
     }
+
 
     public interface RequestUser {
         @GET("api/users") // Adjusted path to match your API
@@ -247,19 +257,25 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
                     .show();
         });
 
+
         restartButton.setOnClickListener(view -> {
-            new AlertDialog.Builder(view.getContext()) // Use 'view' instead of 'v'
+            new AlertDialog.Builder(view.getContext())
                     .setTitle("Confirm Restart")
                     .setMessage("Are you sure you want to remove all users and call the API again?")
                     .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-            userViewModel.deleteAllUsers(); // Delete all users from the database
-            userViewModel.refreshData(); // Call API to refresh data
+                        userViewModel.deleteAllUsers(); // Delete all users from the database
+                        userViewModel.refreshData(); // Call API to refresh data
 
+                        // Clear search query and refresh the UI
+                        searchView.setQuery("", false);
+                        searchView.clearFocus();
+                        userAdapter.updateList(new ArrayList<>(userArrayList)); // Reset the list in the adapter
                     })
                     .setNegativeButton(android.R.string.no, null)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
         });
+
 
         sortButton.setOnClickListener(view -> showSortOptions());
 
@@ -320,15 +336,26 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
     }
 
     private void performSearch(String query) {
-        searchList.clear();
-        for (UserData user : userArrayList) {
-            if (user.getFirstName().toLowerCase().contains(query.toLowerCase()) ||
-                    user.getLastName().toLowerCase().contains(query.toLowerCase())) {
-                searchList.add(user);
+        // Create a new searchList based on the query
+        ArrayList<UserData> filteredList = new ArrayList<>();
+        if (query.length() > 0) {
+            for (UserData user : userArrayList) {
+                if (user.getFirstName().toUpperCase().contains(query.toUpperCase()) ||
+                        user.getLastName().toUpperCase().contains(query.toUpperCase())) {
+                    filteredList.add(user);
+                }
             }
+        } else {
+            filteredList.addAll(userArrayList);
         }
-        userAdapter.updateList(searchList);
+
+        // Update the adapter with the new search results
+        userAdapter = new UserAdapter(this, filteredList, this::onEditButtonClick, this::onRemoveButtonClick);
+        recyclerView.setAdapter(userAdapter);
     }
+
+
+
 
     private void showSortOptions() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

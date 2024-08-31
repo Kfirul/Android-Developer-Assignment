@@ -13,10 +13,10 @@ import java.util.ArrayList;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
 
-    private Context context;
-    private ArrayList<UserData> arrayList;
-    private OnEditButtonClickListener onEditButtonClickListener;
-    private OnRemoveButtonClickListener removeButtonClickListener;
+    private final Context context;
+    private final ArrayList<UserData> arrayList;
+    private final OnEditButtonClickListener onEditButtonClickListener;
+    private final OnRemoveButtonClickListener removeButtonClickListener;
 
     public UserAdapter(Context context, ArrayList<UserData> arrayList,
                        OnEditButtonClickListener listener, OnRemoveButtonClickListener removeListener) {
@@ -33,7 +33,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
         return new MyHolder(view);
     }
 
-
     @Override
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
         UserData user = arrayList.get(position);
@@ -47,7 +46,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
             holder.avatar.setImageResource(R.drawable.anonymous);
         }
     }
-
 
     @Override
     public int getItemCount() {
@@ -91,8 +89,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyHolder> {
     }
 
     public void updateList(ArrayList<UserData> newList) {
-        arrayList = new ArrayList<>(newList);
+        arrayList.clear();
+        arrayList.addAll(newList);
         notifyDataSetChanged();
     }
-
 }
