@@ -3,27 +3,25 @@ package com.example.myapplication;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+// Annotates this class as an entity for Room, specifying the table name
 @Entity(tableName = "user_table")
 public class UserEntity {
 
+    // Annotates the field as the primary key and specifies that it should be auto-generated
     @PrimaryKey(autoGenerate = true)
     public long id;
 
+    // Fields for storing user data
     public String email;
     public String firstName;
     public String lastName;
     public String avatar;
 
-//    public UserEntity(String email, String firstName, String lastName, String avatar) {
-//        this.email = email;
-//        this.firstName = firstName;
-//        this.lastName = lastName;
-//        this.avatar = avatar;
-//    }
-//
-//    // No-argument constructor needed for Room
-//    public UserEntity() {}
+    // Default constructor is required by Room for entity creation
+    public UserEntity() {}
 
+
+    // Getter and setter methods for 'id'
     public long getId() {
         return id;
     }
@@ -32,6 +30,7 @@ public class UserEntity {
         this.id = id;
     }
 
+    // Getter and setter methods for 'email'
     public String getEmail() {
         return email;
     }
@@ -40,6 +39,7 @@ public class UserEntity {
         this.email = email;
     }
 
+    // Getter and setter methods for 'firstName'
     public String getFirstName() {
         return firstName;
     }
@@ -48,6 +48,7 @@ public class UserEntity {
         this.firstName = firstName;
     }
 
+    // Getter and setter methods for 'lastName'
     public String getLastName() {
         return lastName;
     }
@@ -56,6 +57,7 @@ public class UserEntity {
         this.lastName = lastName;
     }
 
+    // Getter and setter methods for 'avatar'
     public String getAvatar() {
         return avatar;
     }

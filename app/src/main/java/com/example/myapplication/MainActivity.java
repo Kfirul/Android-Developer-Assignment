@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.OnEdi
 
     private void fetchUsersFromApi() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://reqres.in/") // Adjust to your base URL
+                .baseUrl("https://reqres.in/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
